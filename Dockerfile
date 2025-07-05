@@ -1,7 +1,7 @@
 # Use Rocky Linux 9 as the base image and add bootc capabilities
 FROM rockylinux:9
 
-# Install bootc and required packages
+# Install bootc and required packages for a bootable system
 RUN dnf update -y && \
     dnf install -y \
         bootc \
@@ -11,8 +11,13 @@ RUN dnf update -y && \
         efibootmgr \
         shim-x64 \
         chrony \
-        cloud-init && \
+        cloud-init \
+        systemd \
+        NetworkManager && \
     dnf clean all
 
-# Configure bootc for this image
-RUN bootc switch --mutate-in-place --transport registry ghcr.io/janwelker/bootc-tests:latest || true
+# Enable essential services
+RUN systemctl enable chronyd NetworkManager cloud-init
+
+# Set up a basic bootc-compatible filesystem structure
+RUN mkdir -p /var/lib/containers
