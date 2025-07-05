@@ -1,13 +1,7 @@
 {
   "repos": [
-    {
-      "name": "baseos",
-      "baseurl": "https://dl.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/"
-    },
-    {
-      "name": "appstream",
-      "baseurl": "https://dl.rockylinux.org/pub/rocky/9/AppStream/x86_64/os/"
-    }
+    "baseos",
+    "appstream"
   ],
   "packages": [
     "@core",

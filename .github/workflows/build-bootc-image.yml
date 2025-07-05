@@ -62,9 +62,16 @@ jobs:
 
       - name: Compose ostree commit
         run: |
+          # Copy repository configuration to ensure rpm-ostree can access it
+          mkdir -p ./compose-repos
+          cp /etc/yum.repos.d/*.repo ./compose-repos/
+          
+          # Run rpm-ostree compose with unified core and explicit repo directory
           rpm-ostree compose tree \
+            --unified-core \
             --repo=./repo \
             --cachedir=./cache \
+            --ex-unified-core-repo-dir=./compose-repos \
             ./rocky-bootc-tree.json
         # Note: This step is tricky in a non-RHEL environment.
         # We are assuming the runner has access to the necessary tools and repos.
