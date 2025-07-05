@@ -26,7 +26,7 @@ jobs:
           dnf update -y
           
           # Install dependencies - qemu-img provides disk image utilities needed by bootc
-          dnf install -y podman rpm-ostree bootc qemu-img
+          dnf install -y podman rpm-ostree ostree bootc qemu-img
 
       - name: Configure Podman for container environment
         run: |
@@ -49,9 +49,14 @@ jobs:
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Compose ostree commit
+      - name: Initialize OSTree repository
         run: |
           mkdir -p repo cache
+          # Initialize the OSTree repository
+          ostree init --repo=./repo --mode=archive-z2
+
+      - name: Compose ostree commit
+        run: |
           rpm-ostree compose tree \
             --repo=./repo \
             --cachedir=./cache \
