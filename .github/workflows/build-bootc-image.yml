@@ -10,6 +10,8 @@ jobs:
   build-and-publish:
     name: Build and Publish bootc Image
     runs-on: ubuntu-latest
+    container:
+      image: rockylinux:9
     permissions:
       contents: read
       packages: write # Required to push to GitHub Container Registry
@@ -25,8 +27,8 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y podman rpm-ostree bootc qemu-utils
+          dnf update -y
+          dnf install -y podman rpm-ostree bootc qemu-utils
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -41,7 +43,7 @@ jobs:
       - name: Compose ostree commit
         run: |
           mkdir -p repo cache
-          sudo rpm-ostree compose tree \
+          rpm-ostree compose tree \
             --repo=./repo \
             --cachedir=./cache \
             ./rocky-bootc-tree.json
@@ -65,10 +67,10 @@ jobs:
           IMAGE_FILE="rocky-bootc-${{ github.sha }}.qcow2"
           
           # Pull the image we just pushed to ensure we have it locally for bootc
-          sudo podman pull $IMAGE_TAG
+          podman pull $IMAGE_TAG
           
           # Create the disk image
-          sudo bootc disk create \
+          bootc disk create \
             --image-size 10G \
             $IMAGE_TAG \
             $IMAGE_FILE
