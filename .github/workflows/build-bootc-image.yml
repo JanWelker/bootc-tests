@@ -23,7 +23,9 @@ jobs:
       - name: Install build dependencies
         run: |
           dnf update -y
-          dnf install -y podman rpm-ostree bootc qemu-utils
+          
+          # Install dependencies - qemu-img provides disk image utilities needed by bootc
+          dnf install -y podman rpm-ostree bootc qemu-img
 
       - name: Login to GitHub Container Registry
         run: |
