@@ -57,8 +57,19 @@ jobs:
 
       - name: Configure Rocky Linux repositories
         run: |
-          # Create repository configuration files that match the names in rocky-bootc-tree.json
-          cat > /etc/yum.repos.d/rocky-baseos.repo << 'EOF'
+          # Check what repositories are already available
+          echo "=== Available repositories ==="
+          dnf repolist --all
+          
+          echo "=== Repository files ==="
+          ls -la /etc/yum.repos.d/
+          
+          # Check if we need to enable existing repositories or create new ones
+          if dnf repolist | grep -q "baseos"; then
+            echo "BaseOS repository already exists"
+          else
+            echo "Creating BaseOS repository configuration"
+            cat > /etc/yum.repos.d/rocky-baseos.repo << 'EOF'
           [rocky-baseos]
           name=Rocky Linux $releasever - BaseOS
           baseurl=https://dl.rockylinux.org/pub/rocky/$releasever/BaseOS/$basearch/os/
@@ -66,8 +77,13 @@ jobs:
           gpgcheck=1
           gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rockylinux
           EOF
+          fi
           
-          cat > /etc/yum.repos.d/rocky-appstream.repo << 'EOF'
+          if dnf repolist | grep -q "appstream"; then
+            echo "AppStream repository already exists"
+          else
+            echo "Creating AppStream repository configuration"
+            cat > /etc/yum.repos.d/rocky-appstream.repo << 'EOF'
           [rocky-appstream]
           name=Rocky Linux $releasever - AppStream
           baseurl=https://dl.rockylinux.org/pub/rocky/$releasever/AppStream/$basearch/os/
@@ -75,9 +91,13 @@ jobs:
           gpgcheck=1
           gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rockylinux
           EOF
+          fi
           
           # Update repository metadata
           dnf makecache
+          
+          echo "=== Final repository list ==="
+          dnf repolist
 
       - name: Compose ostree commit
         run: |
