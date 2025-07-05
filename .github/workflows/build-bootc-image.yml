@@ -26,7 +26,7 @@ jobs:
           dnf update -y
           
           # Install dependencies - qemu-img provides disk image utilities needed by bootc
-          dnf install -y podman rpm-ostree ostree bootc qemu-img
+          dnf install -y podman bootc qemu-img
 
       - name: Configure Podman for container environment
         run: |
@@ -49,32 +49,6 @@ jobs:
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Initialize OSTree repository
-        run: |
-          mkdir -p repo cache
-          # Initialize the OSTree repository
-          ostree init --repo=./repo --mode=archive-z2
-
-      - name: Update repository metadata
-        run: |
-          # Update repository metadata to ensure latest package information
-          dnf makecache
-
-      - name: Compose ostree commit
-        run: |
-          # Set environment variables for rpm-ostree to find repositories
-          export RPM_OSTREE_REPO_TEST_ROOTFS_RPMDB_ONLY=1
-          
-          # Run rpm-ostree compose with working directory context
-          rpm-ostree compose tree \
-            --unified-core \
-            --repo=./repo \
-            --cachedir=./cache \
-            --workdir=/tmp/compose-workdir \
-            ./rocky-bootc-tree.json
-        # Note: This step is tricky in a non-RHEL environment.
-        # We are assuming the runner has access to the necessary tools and repos.
-        # A more robust solution might use a containerized build environment.
 
       - name: Build and Push Container Image
         id: build-and-push
