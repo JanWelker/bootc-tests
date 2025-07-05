@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: rockylinux:9
+      options: --privileged --security-opt seccomp=unconfined
     permissions:
       contents: read
       packages: write # Required to push to GitHub Container Registry
@@ -26,6 +27,23 @@ jobs:
           
           # Install dependencies - qemu-img provides disk image utilities needed by bootc
           dnf install -y podman rpm-ostree bootc qemu-img
+
+      - name: Configure Podman for container environment
+        run: |
+          # Create podman directories
+          mkdir -p ~/.config/containers
+          
+          # Configure storage for rootless podman in container
+          cat > ~/.config/containers/storage.conf << EOF
+          [storage]
+          driver = "vfs"
+          EOF
+          
+          # Set up registries
+          cat > ~/.config/containers/registries.conf << EOF
+          [registries.search]
+          registries = ['docker.io', 'quay.io', 'ghcr.io']
+          EOF
 
       - name: Login to GitHub Container Registry
         run: |
