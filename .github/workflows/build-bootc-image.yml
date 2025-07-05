@@ -53,7 +53,9 @@ jobs:
       - name: Build and Push Container Image
         id: build-and-push
         run: |
-          IMAGE_TAG=ghcr.io/${{ github.repository }}:${{ github.sha }}
+          # Convert repository name to lowercase for container registry compatibility
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_TAG=ghcr.io/${REPO_LOWER}:${{ github.sha }}
           
           # Build the container image
           podman build -t $IMAGE_TAG -f ./Dockerfile .
