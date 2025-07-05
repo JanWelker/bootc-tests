@@ -1,9 +1,18 @@
-# Use the bootc base image for CentOS Stream 9 as a compatible starting point
-# This provides the necessary ostree setup in the container
-FROM quay.io/centos-bootc/centos-bootc:stream9
+# Use Rocky Linux 9 as the base image and add bootc capabilities
+FROM rockylinux:9
 
-# Remove the existing CentOS ostree commit
-RUN rm -rf /usr/lib/ostree
+# Install bootc and required packages
+RUN dnf update -y && \
+    dnf install -y \
+        bootc \
+        kernel \
+        grub2 \
+        grub2-efi-x64 \
+        efibootmgr \
+        shim-x64 \
+        chrony \
+        cloud-init && \
+    dnf clean all
 
-# Copy our newly composed Rocky Linux repo into the image
-COPY ./repo /usr/lib/ostree/repo
+# Configure bootc for this image
+RUN bootc switch --mutate-in-place --transport registry ghcr.io/janwelker/bootc-tests:latest || true
