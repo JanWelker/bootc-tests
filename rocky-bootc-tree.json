@@ -1,7 +1,7 @@
 {
   "repos": [
-    "rocky-baseos",
-    "rocky-appstream"
+    "baseos",
+    "appstream"
   ],
   "packages": [
     "@core",
