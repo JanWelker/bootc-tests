@@ -40,6 +40,7 @@ jobs:
         run: |
           sudo podman run --rm --privileged \
             --security-opt label=type:unconfined_t \
+            -v /var/lib/containers/storage:/var/lib/containers/storage \
             -v $(pwd)/output:/output:Z \
             quay.io/centos-bootc/bootc-image-builder:latest \
             --type qcow2 \
