@@ -62,13 +62,13 @@ jobs:
       - name: List and verify output files
         run: |
           echo "Output directory contents:"
-          ls -la output/
+          ls -la output/bootiso/
 
       - name: Upload disk image artifact
         uses: actions/upload-artifact@v4
         with:
           name: fedora-bootc-image-${{ github.run_number }}
-          path: output/*.iso
+          path: output/bootiso/*.iso
           retention-days: 3
           if-no-files-found: error
 
