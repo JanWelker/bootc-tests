@@ -3,6 +3,9 @@ name: Build bootc Image
 on:
   push:
     branches: [ main ]
+    paths:
+      - '.github/workflows/build-bootc-image.yml'
+      - 'container/Containerfile'
   workflow_dispatch:
 
 env:
