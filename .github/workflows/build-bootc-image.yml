@@ -1,102 +1,73 @@
-name: Build Rocky Linux bootc Image
+name: Build bootc Image
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch: # Allows manual triggering
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: localhost/fedora-bootc:latest
 
 jobs:
-  build-and-publish:
-    name: Build and Publish bootc Image
+  build:
     runs-on: ubuntu-latest
-    container:
-      image: rockylinux:9
-      options: --privileged --security-opt seccomp=unconfined
-    permissions:
-      contents: read
-      packages: write # Required to push to GitHub Container Registry
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install build dependencies
+      - name: Install dependencies
         run: |
-          dnf update -y
-          
-          # Install dependencies - qemu-img provides disk image utilities needed by bootc
-          dnf install -y podman bootc qemu-img
+          sudo apt-get update
+          sudo apt-get install -y podman qemu-utils
 
-      - name: Configure Podman for container environment
+      - name: Build container image
         run: |
-          # Create podman directories
-          mkdir -p ~/.config/containers
-          
-          # Configure storage for rootless podman in container
-          cat > ~/.config/containers/storage.conf << EOF
-          [storage]
-          driver = "vfs"
-          EOF
-          
-          # Set up registries
-          cat > ~/.config/containers/registries.conf << EOF
-          [registries.search]
-          registries = ['docker.io', 'quay.io', 'ghcr.io']
-          EOF
+          podman build -t ${{ env.IMAGE_NAME }} container/
 
-      - name: Login to GitHub Container Registry
+      - name: Verify container image
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+          podman images | grep fedora-bootc
 
-
-      - name: Build and Push Container Image
-        id: build-and-push
+      - name: Install bootc-image-builder
         run: |
-          # Convert repository name to lowercase for container registry compatibility
-          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_TAG=ghcr.io/${REPO_LOWER}:${{ github.sha }}
-          
-          # Build the container image
-          podman build -t $IMAGE_TAG -f ./Dockerfile .
-          
-          # Push the image
-          podman push $IMAGE_TAG
-          
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          podman pull quay.io/fedora/bootc-image-builder:latest
 
-      - name: Create Bootable Disk Image
+      - name: Create output directory
+        run: mkdir -p output
+
+      - name: Build bootc disk image
         run: |
-          IMAGE_FILE="rocky-bootc-${{ github.sha }}.qcow2"
-          
-          # Pull the image we just pushed to ensure we have it locally
-          podman pull ${{ env.IMAGE_TAG }}
-          
-          # Check available bootc commands
-          echo "Available bootc commands:"
-          bootc --help
-          
-          # Try alternative approaches for creating disk image
-          if bootc --help | grep -q "install"; then
-            echo "Using bootc install approach"
-            # Create a disk image using qemu-img and then install to it
-            qemu-img create -f qcow2 $IMAGE_FILE 10G
-            
-            # Create a loop device and install bootc to it
-            # This is a simplified approach - in production you'd want proper partitioning
-            echo "Created disk image: $IMAGE_FILE"
-          else
-            echo "bootc disk creation not supported in this version"
-            echo "Creating container image artifact instead"
-            podman save ${{ env.IMAGE_TAG }} -o rocky-bootc-${{ github.sha }}.tar
-            IMAGE_FILE="rocky-bootc-${{ github.sha }}.tar"
-          fi
-            
-          echo "IMAGE_FILE=$IMAGE_FILE" >> $GITHUB_ENV
+          sudo podman run --rm --privileged \
+            --security-opt label=type:unconfined_t \
+            -v $(pwd)/output:/output:Z \
+            quay.io/fedora/bootc-image-builder:latest \
+            --type qcow2 \
+            --output /output \
+            ${{ env.IMAGE_NAME }}
 
-      - name: Upload Disk Image as Artifact
+      - name: List and verify output files
+        run: |
+          echo "Output directory contents:"
+          ls -la output/
+          echo "Checking for qcow2 files:"
+          find output/ -name "*.qcow2" -exec ls -lh {} \;
+
+      - name: Upload disk image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rocky-bootc-image
-          path: ${{ env.IMAGE_FILE }}
-          retention-days: 5
+          name: fedora-bootc-image-${{ github.run_number }}
+          path: output/*.qcow2
+          retention-days: 3
+          if-no-files-found: error
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ github.run_number }}
+          path: |
+            output/*.log
+            output/*.txt
+          retention-days: 3

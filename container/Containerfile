@@ -1,0 +1,12 @@
+FROM quay.io/fedora/fedora-bootc:42
+
+# Install only minimal base packages
+RUN rpm-ostree install \
+    vim-minimal \
+    curl \
+    wget \
+    && rpm-ostree cleanup -m && \
+    ostree container commit
+
+# Set up basic system configuration
+RUN echo "Fedora 42 bootc image built on $(date)" > /etc/motd
