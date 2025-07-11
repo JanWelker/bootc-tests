@@ -8,11 +8,15 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: localhost/fedora-bootc
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/${{ github.repository }}/fedora-bootc
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,17 +25,28 @@ jobs:
         run: |
           sudo apt-get install -y podman
 
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build container image
         run: |
-          podman build -t ${{ env.IMAGE_NAME }} container/
+          podman build -t ${{ env.IMAGE_NAME }}:latest container/
 
-      - name: Verify container image
+      - name: Push container image to registry
         run: |
-          podman images | grep fedora-bootc
+          podman push ${{ env.IMAGE_NAME }}:latest
 
       - name: Install bootc-image-builder
         run: |
-          podman pull quay.io/centos-bootc/bootc-image-builder:latest
+          sudo podman pull quay.io/centos-bootc/bootc-image-builder:latest
+
+      - name: Pull container image for bootc-image-builder
+        run: |
+          sudo podman pull ${{ env.IMAGE_NAME }}:latest
 
       - name: Create output directory
         run: mkdir -p output
@@ -45,7 +60,7 @@ jobs:
             quay.io/centos-bootc/bootc-image-builder:latest \
             --type qcow2 \
             --output /output \
-            ${{ env.IMAGE_NAME }}
+            ${{ env.IMAGE_NAME }}:latest
 
       - name: List and verify output files
         run: |
