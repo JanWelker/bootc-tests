@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/${{ github.repository }}/fedora-bootc
+  IMAGE_NAME: ghcr.io/janwelker/bootc-tests/fedora-bootc
 
 jobs:
   build:
