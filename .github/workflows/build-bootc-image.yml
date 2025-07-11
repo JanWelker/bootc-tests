@@ -40,7 +40,7 @@ jobs:
         run: |
           podman push ${{ env.REGISTRY }}/${{ env.REPO_PATH }}/${{ env.IMAGE_NAME }}:latest
 
-      - name: Install bootc-image-builder
+      - name: Pull bootc-image-builder
         run: |
           sudo podman pull quay.io/centos-bootc/bootc-image-builder:latest
 
@@ -72,7 +72,7 @@ jobs:
       - name: Upload disk image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.IMAGE_NAME }}-image-${{ github.run_number }}.iso
+          name: ${{ env.IMAGE_NAME }}-${{ env.FEDORA_VERSION }}_${{ github.run_number }}.iso
           path: output/bootiso/install.iso
           retention-days: 3
           if-no-files-found: error
