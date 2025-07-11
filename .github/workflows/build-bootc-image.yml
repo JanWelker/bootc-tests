@@ -7,7 +7,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/janwelker/bootc-tests/fedora-bootc
+  REPO_PATH: janwelker/bootc-tests
+  IMAGE_NAME: fedora-bootc
 
 jobs:
   build:
@@ -29,11 +30,11 @@ jobs:
 
       - name: Build container image
         run: |
-          podman build -t ${{ env.IMAGE_NAME }}:latest container/
+          podman build -t ${{ env.REGISTRY }}/${{ env.REPO_PATH }}/${{ env.IMAGE_NAME }}:latest container/
 
       - name: Push container image to registry
         run: |
-          podman push ${{ env.IMAGE_NAME }}:latest
+          podman push ${{ env.REGISTRY }}/${{ env.REPO_PATH }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Install bootc-image-builder
         run: |
@@ -41,7 +42,7 @@ jobs:
 
       - name: Pull container image for bootc-image-builder
         run: |
-          sudo podman pull ${{ env.IMAGE_NAME }}:latest
+          sudo podman pull ${{ env.REGISTRY }}/${{ env.REPO_PATH }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Create output directory
         run: mkdir -p output
@@ -57,7 +58,7 @@ jobs:
             --use-librepo \
             --rootfs xfs \
             --output /output \
-            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.REPO_PATH }}/${{ env.IMAGE_NAME }}:latest
 
       - name: List  output files
         run: |
@@ -67,7 +68,7 @@ jobs:
       - name: Upload disk image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: fedora-bootc-image-${{ github.run_number }}.iso
+          name: ${{ env.IMAGE_NAME }}-image-${{ github.run_number }}.iso
           path: output/bootiso/install.iso
           retention-days: 3
           if-no-files-found: error
