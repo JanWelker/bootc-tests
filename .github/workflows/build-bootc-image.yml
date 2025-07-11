@@ -71,13 +71,3 @@ jobs:
           path: output/bootiso/*.iso
           retention-days: 3
           if-no-files-found: error
-
-      - name: Upload build logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs-${{ github.run_number }}
-          path: |
-            output/*.log
-            output/*.txt
-          retention-days: 3
