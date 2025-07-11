@@ -12,6 +12,7 @@ env:
   REGISTRY: ghcr.io
   REPO_PATH: janwelker/bootc-tests
   IMAGE_NAME: fedora-bootc
+  FEDORA_VERSION: 42
 
 jobs:
   build:
@@ -33,7 +34,7 @@ jobs:
 
       - name: Build container image
         run: |
-          podman build -t ${{ env.REGISTRY }}/${{ env.REPO_PATH }}/${{ env.IMAGE_NAME }}:latest container/
+          podman build --build-arg FEDORA_VERSION=${{ env.FEDORA_VERSION }} -t ${{ env.REGISTRY }}/${{ env.REPO_PATH }}/${{ env.IMAGE_NAME }}:latest container/
 
       - name: Push container image to registry
         run: |
