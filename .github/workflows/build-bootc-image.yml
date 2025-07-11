@@ -15,6 +15,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -57,7 +58,7 @@ jobs:
             --output /output \
             ${{ env.IMAGE_NAME }}:latest
 
-      - name: List and verify output files
+      - name: List  output files
         run: |
           echo "Output directory contents:"
           ls -la output/bootiso/
@@ -65,7 +66,7 @@ jobs:
       - name: Upload disk image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: fedora-bootc-image-${{ github.run_number }}
-          path: output/bootiso/*.iso
+          name: fedora-bootc-image-${{ github.run_number }}.iso
+          path: output/bootiso/install.iso
           retention-days: 3
           if-no-files-found: error
