@@ -59,6 +59,7 @@ jobs:
             -v $(pwd)/output:/output:Z \
             quay.io/centos-bootc/bootc-image-builder:latest \
             --type qcow2 \
+            --rootfs xfs \
             --output /output \
             ${{ env.IMAGE_NAME }}:latest
 
