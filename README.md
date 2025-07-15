@@ -5,6 +5,7 @@ This repository builds an immutable Fedora 42 bootable ISO image using bootc ima
 ## Overview
 
 This project creates a minimal, immutable Fedora 42 bootable ISO that can be used for:
+
 - Physical hardware installation
 - Virtual machine installation
 - Container-based deployments
@@ -30,6 +31,7 @@ The workflow can be triggered in two ways:
 ### Build Process
 
 The workflow performs these steps:
+
 1. Builds a container image from the [`Containerfile`](container/Containerfile)
 2. Pushes the container image to GitHub Container Registry (`ghcr.io`)
 3. Substitutes GitHub Secrets into the [`config.toml`](config.toml) file
@@ -140,7 +142,7 @@ The Fedora version is controlled by the `FEDORA_VERSION` environment variable in
 
 ## Repository Structure
 
-```
+```text
 .
 ├── .github/
 │   └── workflows/
@@ -154,6 +156,7 @@ The Fedora version is controlled by the `FEDORA_VERSION` environment variable in
 ## Requirements
 
 The build process requires:
+
 - GitHub Actions runner with Ubuntu
 - Podman container runtime
 - Privileged container execution for image building
