@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/build-bootc-image.yml'
       - 'container/Containerfile'
+      - 'config.toml'
   workflow_dispatch:
 
 env:
@@ -16,7 +17,8 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest-arm
+    runs-on: ubuntu-latest
+    environment: prod
     permissions:
       contents: read
       packages: write
@@ -51,16 +53,26 @@ jobs:
       - name: Create output directory
         run: mkdir -p output
 
+      - name: Substitute secrets in config.toml
+        env:
+          BOOTC_ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          BOOTC_ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          BOOTC_SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+        run: |
+          envsubst < config.toml > config.toml.tmp && mv config.toml.tmp config.toml
+
       - name: Build bootc disk image
         run: |
           sudo podman run --rm --privileged \
             --security-opt label=type:unconfined_t \
             -v /var/lib/containers/storage:/var/lib/containers/storage \
             -v $(pwd)/output:/output:Z \
+            -v $(pwd)/config.toml:/config.toml:Z \
             quay.io/centos-bootc/bootc-image-builder:latest \
             --type anaconda-iso \
             --use-librepo \
             --rootfs xfs \
+            --config /config.toml \
             --output /output \
             ${{ env.REGISTRY }}/${{ env.REPO_PATH }}/${{ env.IMAGE_NAME }}:latest
 

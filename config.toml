@@ -1,0 +1,26 @@
+# bootc-image-builder configuration file
+# This file configures user creation and SSH key setup for the bootable image
+
+[[customizations.user]]
+name = "${BOOTC_ADMIN_USERNAME}"
+description = "Administrator user"
+password = "${BOOTC_ADMIN_PASSWORD}"
+key = "${BOOTC_SSH_PUBLIC_KEY}"
+groups = ["wheel"]
+
+# Additional SSH configuration
+[customizations.services]
+enabled = ["sshd"]
+
+# Firewall configuration to allow SSH
+[[customizations.firewall.services]]
+name = "ssh"
+
+[customizations.installer.kickstart]
+contents = """
+text --non-interactive
+zerombr
+clearpart --all --initlabel --disklabel=gpt
+autopart --noswap --type=lvm
+network --bootproto=dhcp --device=link --activate --onboot=on
+"""
