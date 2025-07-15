@@ -7,12 +7,3 @@ description = "Administrator user"
 password = "${BOOTC_ADMIN_PASSWORD}"
 key = "${BOOTC_SSH_PUBLIC_KEY}"
 groups = ["wheel"]
-
-[customizations.installer.kickstart]
-contents = """
-text --non-interactive
-zerombr
-clearpart --all --initlabel --disklabel=gpt
-autopart --noswap --type=lvm
-network --bootproto=dhcp --device=link --activate --onboot=on
-"""
